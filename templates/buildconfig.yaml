@@ -1,0 +1,32 @@
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: {{default "java-builder" .Values.name}}
+  namespace: build-tools
+spec:
+  successfulBuildsHistoryLimit: 2
+  failedBuildsHistoryLimit: 1
+  runPolicy: "Serial"
+  triggers:
+    - type: "ImageChange"
+      imageChange:
+        from:
+          kind: ImageStreamTag
+          name: "s2i-jdk8:latest"
+    - type: "ConfigChange"
+  source:
+    type: "Git"
+    git:
+      uri: {{.Values.git.Uri}}
+      ref: {{ .Values.git.ref }}
+    contextDir: .
+  strategy:
+    type: "Source"
+    sourceStrategy:
+      from:
+        kind: "ImageStreamTag"
+        name: "s2i-jdk8:latest"
+  output:
+    to:
+      kind: "DockerImage"
+      name: "{{ .Values.destImage.registry }}/library/{{ .Values.destImage.name }}:{{ .Values.destImage.tag }}"
